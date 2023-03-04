@@ -1,5 +1,5 @@
 #[cfg(feature = "attribute")]
-use error_hook_attr::anywhere;
+use error_hook_attr::hook;
 
 use thiserror::Error;
 
