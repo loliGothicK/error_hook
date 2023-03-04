@@ -1,22 +1,22 @@
 #[cfg(feature = "attribute")]
-use error_hook_attr::hook;
+pub use error_hook_attr::hook;
 
 use thiserror::Error;
 
 #[derive(Error, Debug)]
 #[error(transparent)]
 pub enum Error {
-    Boxed(Box<dyn std::error::Error>),
+    Boxed(Box<dyn std::error::Error + Send + Sync>),
     Anyhow(#[from] anyhow::Error),
 }
 
-struct Ghost<E, F>(E, F);
+pub struct Ghost<E, F>(E, F);
 
-impl<F> From<Ghost<Box<dyn std::error::Error>, F>> for Error
+impl<F> From<Ghost<Box<dyn std::error::Error + Send + Sync>, F>> for Error
 where
-    F: FnOnce(&Box<dyn std::error::Error>),
+    F: FnOnce(&Box<dyn std::error::Error + Send + Sync>),
 {
-    fn from(source: Ghost<Box<dyn std::error::Error>, F>) -> Self {
+    fn from(source: Ghost<Box<dyn std::error::Error + Send + Sync>, F>) -> Self {
         let Ghost(src, hook) = source;
         hook(&src);
         Self::Boxed(src)
@@ -36,17 +36,17 @@ where
 
 pub type Result<T> = std::result::Result<T, Error>;
 
-trait SameAs<T> {}
+pub trait SameAs<T> {}
 impl<T> SameAs<T> for T {}
 
-trait ResultExt<T, E> {
+pub trait ResultExt<T, E> {
     fn into_ghost<F>(self, hook: F) -> std::result::Result<T, Ghost<E, F>>
     where
         Self: SameAs<std::result::Result<T, E>>,
         F: FnOnce(&E);
 }
 
-trait IntoBoxed<T> {
+pub trait IntoBoxed<T> {
     fn into_boxed(self) -> std::result::Result<T, Box<dyn std::error::Error>>;
 }
 
