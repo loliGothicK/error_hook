@@ -1,6 +1,24 @@
+//! `error_hook` is a library for automation to insert action at error conversion.
+//!
+//! # Example
+//! ```
+//! use error_hook_attr::hook;
+//!
+//! #[hook(e => println!("{e}"))]
+//! fn test(a: i32, b: i32) -> error_hook::Result<i32> {
+//!     a.checked_mul(b).ok_or(anyhow::anyhow!("overflow"))
+//! }
+//!
+//! fn main() -> anyhow::Result<()> {
+//!     let _ = test(888888888, 888888888);
+//!     //      ^^^^ this prints 'overflow'
+//!
+//!     Ok(())
+//! }
+//! ```
+
 #[cfg(feature = "attribute")]
 pub use error_hook_attr::hook;
-
 use thiserror::Error;
 
 #[derive(Error, Debug)]
@@ -10,71 +28,106 @@ pub enum Error {
     Anyhow(#[from] anyhow::Error),
 }
 
-pub struct Ghost<E, F>(E, F);
+#[doc(hidden("or you will be fired"))]
+pub struct SecretStructDoNotUseOrYouWillBeFired<E, F>(E, F);
 
-impl<F> From<Ghost<Box<dyn std::error::Error + Send + Sync>, F>> for Error
+/// Internal use only
+impl<F> From<SecretStructDoNotUseOrYouWillBeFired<Box<dyn std::error::Error + Send + Sync>, F>>
+    for Error
 where
     F: FnOnce(&Box<dyn std::error::Error + Send + Sync>),
 {
-    fn from(source: Ghost<Box<dyn std::error::Error + Send + Sync>, F>) -> Self {
-        let Ghost(src, hook) = source;
+    fn from(
+        source: SecretStructDoNotUseOrYouWillBeFired<Box<dyn std::error::Error + Send + Sync>, F>,
+    ) -> Self {
+        let SecretStructDoNotUseOrYouWillBeFired(src, hook) = source;
         hook(&src);
         Self::Boxed(src)
     }
 }
 
-impl<F> From<Ghost<anyhow::Error, F>> for Error
+/// Internal use only
+impl<F> From<SecretStructDoNotUseOrYouWillBeFired<anyhow::Error, F>> for Error
 where
     F: FnOnce(&anyhow::Error),
 {
-    fn from(source: Ghost<anyhow::Error, F>) -> Self {
-        let Ghost(src, hook) = source;
+    fn from(source: SecretStructDoNotUseOrYouWillBeFired<anyhow::Error, F>) -> Self {
+        let SecretStructDoNotUseOrYouWillBeFired(src, hook) = source;
         hook(&src);
         Self::Anyhow(src)
     }
 }
 
+/// Type alias for hook.
+///
+/// The return value of a function that attaches a hook attribute should be of this type (required).
 pub type Result<T> = std::result::Result<T, Error>;
 
+/// for meta programming
 pub trait SameAs<T> {}
+
+/// Literally
 impl<T> SameAs<T> for T {}
 
-pub trait ResultExt<T, E> {
-    fn into_ghost<F>(self, hook: F) -> std::result::Result<T, Ghost<E, F>>
+#[doc(hidden("or you will be fired"))]
+pub trait SecretTraitDoNotUseOrYouWillBeFired<T, E> {
+    fn into_ghost<F>(
+        self,
+        hook: F,
+    ) -> std::result::Result<T, SecretStructDoNotUseOrYouWillBeFired<E, F>>
     where
         Self: SameAs<std::result::Result<T, E>>,
         F: FnOnce(&E);
 }
-
+///　Trait to convert Err type of Result to dynamic trait object.
+///
+/// Since hook only supports `Box<dyn std::error::Error>` and `anyhow::Error`,
+/// please use this trace to convert it to a dynamic trace object if necessary.
 pub trait IntoBoxed<T> {
+    ///　Converts Err type of Result to dynamic trait object.
     fn into_boxed(self) -> std::result::Result<T, Box<dyn std::error::Error>>;
 }
 
+///　Trait to convert Err type of Result to dynamic trait object.
+///
+/// Since hook only supports `Box<dyn std::error::Error>` and `anyhow::Error`,
+/// please use this trace to convert it to a dynamic trace object if necessary.
 impl<T, E: std::error::Error + 'static> IntoBoxed<T> for std::result::Result<T, E> {
+    ///　Converts Err type of Result to dynamic trait object.
     fn into_boxed(self) -> std::result::Result<T, Box<dyn std::error::Error>> {
         self.map_err(Into::into)
     }
 }
 
-impl<T> ResultExt<T, Box<dyn std::error::Error>>
+#[doc(hidden("or you will be fired"))]
+impl<T> SecretTraitDoNotUseOrYouWillBeFired<T, Box<dyn std::error::Error>>
     for std::result::Result<T, Box<dyn std::error::Error>>
 {
-    fn into_ghost<F>(self, hook: F) -> std::result::Result<T, Ghost<Box<dyn std::error::Error>, F>>
+    #[doc(hidden("or you will be fired"))]
+    fn into_ghost<F>(
+        self,
+        hook: F,
+    ) -> std::result::Result<T, SecretStructDoNotUseOrYouWillBeFired<Box<dyn std::error::Error>, F>>
     where
         Self: SameAs<std::result::Result<T, Box<dyn std::error::Error>>>,
         F: FnOnce(&Box<dyn std::error::Error>),
     {
-        self.map_err(|e| Ghost(e, hook))
+        self.map_err(|e| SecretStructDoNotUseOrYouWillBeFired(e, hook))
     }
 }
 
-impl<T> ResultExt<T, anyhow::Error> for anyhow::Result<T> {
-    fn into_ghost<F>(self, hook: F) -> std::result::Result<T, Ghost<anyhow::Error, F>>
+#[doc(hidden("or you will be fired"))]
+impl<T> SecretTraitDoNotUseOrYouWillBeFired<T, anyhow::Error> for anyhow::Result<T> {
+    #[doc(hidden)]
+    fn into_ghost<F>(
+        self,
+        hook: F,
+    ) -> std::result::Result<T, SecretStructDoNotUseOrYouWillBeFired<anyhow::Error, F>>
     where
         Self: SameAs<std::result::Result<T, anyhow::Error>>,
         F: FnOnce(&anyhow::Error),
     {
-        self.map_err(|e| Ghost(e, hook))
+        self.map_err(|e| SecretStructDoNotUseOrYouWillBeFired(e, hook))
     }
 }
 

@@ -1,8 +1,14 @@
+//!
+//! This library supplements `hook` _macro attribute_ to hook error conversion
+//! (please use the re-exported macro from `error_hook` via feature `attribute`).
+//!
+
 extern crate proc_macro;
 use proc_macro::TokenStream;
 use quote::quote;
 use syn::{parse_macro_input, Arm, ItemFn};
 
+/// Hooks `From` trait and executes specified action.
 #[proc_macro_attribute]
 pub fn hook(args: TokenStream, input: TokenStream) -> TokenStream {
     let Arm { pat, body, .. } = parse_macro_input!(args as Arm);
@@ -19,7 +25,7 @@ pub fn hook(args: TokenStream, input: TokenStream) -> TokenStream {
             #vis
             #sig
             {
-                use error_hook::ResultExt;
+                use error_hook::SecretTraitDoNotUseOrYouWillBeFired;
 
                 (move || async move #block)()
                 .await
@@ -34,7 +40,7 @@ pub fn hook(args: TokenStream, input: TokenStream) -> TokenStream {
             #vis
             #sig
             {
-                use error_hook::ResultExt;
+                use error_hook::SecretTraitDoNotUseOrYouWillBeFired;
 
                 (move || -> Result<_, _> #block)()
                 .into_ghost(|#pat| #body)
