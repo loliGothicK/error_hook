@@ -1,0 +1,21 @@
+[package]
+name = "error_hook"
+version = "0.1.0"
+edition = "2021"
+authors = ["MitamaLab <mitama@mitama.tech>"]
+description = "error hook"
+repository = "https://github.com/LoliGothick/error_hook"
+license-file = "LICENSE"
+license = "ISC"
+
+[features]
+default = []
+attribute = []
+
+[dependencies]
+error_hook_attr = "0.1.0"
+thiserror = "1.0.38"
+anyhow = "1.0.69"
+
+[dev-dependencies]
+test-case = "3.0.0"

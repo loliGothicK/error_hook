@@ -1,0 +1,5 @@
+[workspace]
+members = [
+    "error_hook",
+    "error_hook_attr",
+]
