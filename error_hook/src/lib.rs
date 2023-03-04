@@ -85,32 +85,35 @@ pub trait SecretTraitDoNotUseOrYouWillBeFired<T, E> {
 /// please use this trace to convert it to a dynamic trace object if necessary.
 pub trait IntoBoxed<T> {
     ///　Converts Err type of Result to dynamic trait object.
-    fn into_boxed(self) -> std::result::Result<T, Box<dyn std::error::Error>>;
+    fn into_boxed(self) -> std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
 }
 
 ///　Trait to convert Err type of Result to dynamic trait object.
 ///
 /// Since hook only supports `Box<dyn std::error::Error>` and `anyhow::Error`,
 /// please use this trace to convert it to a dynamic trace object if necessary.
-impl<T, E: std::error::Error + 'static> IntoBoxed<T> for std::result::Result<T, E> {
+impl<T, E: std::error::Error + Send + Sync + 'static> IntoBoxed<T> for std::result::Result<T, E> {
     ///　Converts Err type of Result to dynamic trait object.
-    fn into_boxed(self) -> std::result::Result<T, Box<dyn std::error::Error>> {
+    fn into_boxed(self) -> std::result::Result<T, Box<dyn std::error::Error + Send + Sync>> {
         self.map_err(Into::into)
     }
 }
 
 #[doc(hidden("or you will be fired"))]
-impl<T> SecretTraitDoNotUseOrYouWillBeFired<T, Box<dyn std::error::Error>>
-    for std::result::Result<T, Box<dyn std::error::Error>>
+impl<T> SecretTraitDoNotUseOrYouWillBeFired<T, Box<dyn std::error::Error + Send + Sync>>
+    for std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>
 {
     #[doc(hidden("or you will be fired"))]
     fn into_ghost<F>(
         self,
         hook: F,
-    ) -> std::result::Result<T, SecretStructDoNotUseOrYouWillBeFired<Box<dyn std::error::Error>, F>>
+    ) -> std::result::Result<
+        T,
+        SecretStructDoNotUseOrYouWillBeFired<Box<dyn std::error::Error + Send + Sync>, F>,
+    >
     where
-        Self: SameAs<std::result::Result<T, Box<dyn std::error::Error>>>,
-        F: FnOnce(&Box<dyn std::error::Error>),
+        Self: SameAs<std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>>,
+        F: FnOnce(&Box<dyn std::error::Error + Send + Sync>),
     {
         self.map_err(|e| SecretStructDoNotUseOrYouWillBeFired(e, hook))
     }
@@ -152,7 +155,7 @@ mod tests {
     #[test]
     fn boxed_works() {
         #[hook(_ => println!("error"))]
-        fn func(res: Result<(), Box<dyn std::error::Error>>) -> crate::Result<()> {
+        fn func(res: Result<(), Box<dyn std::error::Error + Send + Sync>>) -> crate::Result<()> {
             res
         }
 
