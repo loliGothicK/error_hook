@@ -13,21 +13,34 @@ pub fn hook(args: TokenStream, input: TokenStream) -> TokenStream {
         block,
     } = parse_macro_input!(input as ItemFn);
 
-    quote! {
-        #(#attrs)*
-        #vis
-        #sig
-        {
-            use error_hook::ResultExt;
+    if sig.asyncness.is_some() {
+        quote! {
+            #(#attrs)*
+            #vis
+            #sig
+            {
+                use error_hook::ResultExt;
 
-            (move || -> Result<_, _> {
-                #block
-            })()
-            .into_ghost(|#pat| {
-                #body
-            })
-            .map_err(Into::into)
+                (move || async move #block)()
+                .await
+                .into_ghost(|#pat| #body)
+                .map_err(Into::into)
+            }
         }
+        .into()
+    } else {
+        quote! {
+            #(#attrs)*
+            #vis
+            #sig
+            {
+                use error_hook::ResultExt;
+
+                (move || -> Result<_, _> #block)()
+                .into_ghost(|#pat| #body)
+                .map_err(Into::into)
+            }
+        }
+        .into()
     }
-    .into()
 }

@@ -12,9 +12,9 @@ default = []
 attribute = []
 
 [dependencies]
-error_hook_attr = "0.1.0"
+anyhow = { workspace = true }
+error_hook_attr = { path = "../error_hook_attr" }
 thiserror = "1.0.38"
-anyhow = "1.0.69"
 
 [dev-dependencies]
 test-case = "3.0.0"

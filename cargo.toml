@@ -4,3 +4,11 @@ members = [
     "error_hook_attr",
     "example",
 ]
+
+[workspace.package]
+version = "0.2.1"
+edition = "2021"
+publish = false
+
+[workspace.dependencies]
+anyhow = { version = "1.0.69", features = ["backtrace"] }
