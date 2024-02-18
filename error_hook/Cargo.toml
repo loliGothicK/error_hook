@@ -14,7 +14,7 @@ attribute = []
 [dependencies]
 anyhow = { workspace = true }
 error_hook_attr = "0.1.2"
-thiserror = "1.0.39"
+thiserror = "1.0.57"
 
 [dev-dependencies]
 test-case = "3.0.0"
